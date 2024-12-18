@@ -1,0 +1,18 @@
+Flow analizy phishingu:
+	1. Załadowanie pliku .eml (np. z repozytorium phishing_pot)
+	2. Analiza nagłówków wiadomości 
+		a. Regex wyciągający adresy IP i adresy URL
+		b. Matchowanie wyników z API VirusTotala/bazą danych z Phishtanka
+		c. Output w formie zwracającej potencjalnie niebezpieczne IoC
+	3. Analiza treści wiadomości
+		a. Odkodowanie wiadomości z Base64 (jeśli konieczne)
+		b. Regex wyciągający adresy IP i adresy URL 
+		c. Sprawdzenie typu załącznika za pomocą nagłówka Content-Type (na początek może weźmy pod uwagę tylko pliki .exe)
+	4. Wykorzystanie modelu uczenia maszynowego
+
+Jeżeli próbka nie jest potwierdzona jako phishing, to przechodzimy do kroku 5:
+
+	5. Analiza załączników
+		a. Jeżeli są jakieś adresy URL lub pliki wykonywalne output prosi użytkownika o uruchomienie sandboxa
+		b. Analityk manualnie uruchamia próbkę w sandboxie i ogłasza werdykt (clean/suspicious/malicious)
+Porównanie wyników klasyfikacji modelu oraz werdyktu analityka, ocena szybkości wykrycia.
