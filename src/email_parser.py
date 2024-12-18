@@ -1,9 +1,10 @@
 from collections import defaultdict
-import re
+import regex as re
 import tkinter as tk
 from tkinter import filedialog
 from email.parser import BytesParser
 from email import policy
+import pprint
 
 def load_eml():
     root = tk.Tk()
@@ -44,24 +45,32 @@ def parse_body(msg):
             return msg.get_payload(decode=True).decode(msg.get_content_charset())
 
 
-def extract_ip_and_domains(header_dict):
-    IP_addresses = []
-    domains = []
+def extract_ip_and_domains(object):
 
     ip_pattern = r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
-    domain_pattern = r'[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    domain_pattern1 = r'[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    domain_pattern2 = r'(?<=https?:\/\/)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    
+    if isinstance(object, str):
+        body_IP_addresses = []
+        body_domains = []
+        body_IP_addresses.extend(re.findall(ip_pattern, object))
+        body_domains.extend(re.findall(domain_pattern2, object))
+        return body_IP_addresses, body_domains
 
-    for values in header_dict.items():
-        for value in values:
-            ip_matches = re.findall(ip_pattern, str(value))
-            if ip_matches:
-                IP_addresses.extend(ip_matches)
-            
-            domain_matches = re.findall(domain_pattern, str(value))
-            if domain_matches:
-                domains.extend(domain_matches)
+    if isinstance(object, dict):
+        header_IP_addresses = []
+        header_domains = []
+        for values in object.items():
+            for value in values:
+                ip_matches = re.findall(ip_pattern, str(value))
+                if ip_matches:
+                    header_IP_addresses.extend(ip_matches)
+                domain_matches = re.findall(domain_pattern1, str(value))
+                if domain_matches:
+                    header_domains.extend(domain_matches)
 
-    return IP_addresses, domains
+        return header_IP_addresses, header_domains
 
 message = load_eml()
 header_dict = parse_headers(message)
@@ -70,8 +79,11 @@ body = parse_body(message)
 if header_dict:
     for key, value in header_dict.items():
         print(f"{key}: {value}")
-    IP_addresses, domains = extract_ip_and_domains(header_dict)
+    header_IP_addresses, header_domains = extract_ip_and_domains(header_dict)
+    body_IP_addresses, body_domains = extract_ip_and_domains(body)
     
-    print("IP addresses:", IP_addresses)
-    print("Domains:", domains)
-print(body)
+    print("IP addresses in header:", header_IP_addresses)
+    print("Domains in header:", header_domains)
+print("IP addresses in body:", body_IP_addresses)
+print("Domains in body:", body_domains)
+#pprint.pp(body)

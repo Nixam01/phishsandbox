@@ -6,7 +6,7 @@ Flow analizy phishingu:
 		c. Output w formie zwracającej potencjalnie niebezpieczne IoC
 	3. Analiza treści wiadomości
 		a. Odkodowanie wiadomości z Base64 (jeśli konieczne) - done
-		b. Regex wyciągający adresy IP i adresy URL 
+		b. Regex wyciągający adresy IP i adresy URL - done
 		c. Sprawdzenie typu załącznika za pomocą nagłówka Content-Type (na początek może weźmy pod uwagę tylko pliki .exe)
 	4. Wykorzystanie modelu uczenia maszynowego
 
