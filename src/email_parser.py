@@ -1,10 +1,11 @@
 from collections import defaultdict
 import regex as re
 import tkinter as tk
+import tldextract
 from tkinter import filedialog
 from email.parser import BytesParser
 from email import policy
-import pprint
+from vt_wrapper import check_domain
 
 def load_eml():
     root = tk.Tk()
@@ -45,45 +46,53 @@ def parse_body(msg):
             return msg.get_payload(decode=True).decode(msg.get_content_charset())
 
 
-def extract_ip_and_domains(object):
+def extract_domains(object):
 
-    ip_pattern = r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
     domain_pattern1 = r'[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     domain_pattern2 = r'(?<=https?:\/\/)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
     
     if isinstance(object, str):
-        body_IP_addresses = []
         body_domains = []
-        body_IP_addresses.extend(re.findall(ip_pattern, object))
         body_domains.extend(re.findall(domain_pattern2, object))
-        return body_IP_addresses, body_domains
+        return body_domains
 
     if isinstance(object, dict):
-        header_IP_addresses = []
         header_domains = []
         for values in object.items():
             for value in values:
-                ip_matches = re.findall(ip_pattern, str(value))
-                if ip_matches:
-                    header_IP_addresses.extend(ip_matches)
                 domain_matches = re.findall(domain_pattern1, str(value))
                 if domain_matches:
                     header_domains.extend(domain_matches)
 
-        return header_IP_addresses, header_domains
+        return header_domains
 
 message = load_eml()
 header_dict = parse_headers(message)
 body = parse_body(message)
 
 if header_dict:
-    for key, value in header_dict.items():
-        print(f"{key}: {value}")
-    header_IP_addresses, header_domains = extract_ip_and_domains(header_dict)
-    body_IP_addresses, body_domains = extract_ip_and_domains(body)
+    #for key, value in header_dict.items():
+    #    print(f"{key}: {value}")
+    header_domains = list(dict.fromkeys(map(str.lower, extract_domains(header_dict))))
+    body_domains = list(dict.fromkeys(map(str.lower, extract_domains(body))))
     
-    print("IP addresses in header:", header_IP_addresses)
-    print("Domains in header:", header_domains)
-print("IP addresses in body:", body_IP_addresses)
+for domain in body_domains:
+    domain_analysis_results = {}
+    tld = tldextract.extract(domain).suffix
+    length = len(domain)
+    subdomains = len(tldextract.extract(domain).subdomain.split("."))
+    is_ascii = domain.isascii()
+    domain_creation_date, malicious_hits, is_certificate_valid = check_domain(domain)
+    domain_analysis_results[domain] = {
+            "tld": tld,
+            "length": length,
+            "subdomains": subdomains,
+            "is_ascii": is_ascii,
+            "domain_creation_date": domain_creation_date,
+            "malicious_hits": malicious_hits,
+            "is_certificate_valid": is_certificate_valid
+        }
+    print(domain_analysis_results)
+
+print("Domains in header:", header_domains)
 print("Domains in body:", body_domains)
-#pprint.pp(body)
