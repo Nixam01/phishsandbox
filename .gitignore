@@ -1,2 +1,4 @@
 /src/api.key
 .ipynb_checkpoints
+/src/__pycache__/
+/samples/
