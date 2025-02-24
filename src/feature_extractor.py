@@ -1,15 +1,22 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 from urllib.parse import urlparse
 import tldextract
 import ipaddress
 import re
 
 def main_extractor(URL):
+    driver = webdriver.Chrome()
+    driver.get(URL)
     parsed_url = urlparse(URL)
     fqdn = parsed_url.hostname
     tld = tldextract.extract(URL).suffix
     scheme = parsed_url.scheme
     result = [url_length(URL), fqdn_length(URL), is_domain_ip(fqdn), tld_length(tld), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), whitespace_number(URL), is_https(scheme)] 
     print(result)
+    driver.quit()
+
+# URL features:
 
 def url_length(URL):
     return len(URL)
@@ -61,3 +68,12 @@ def whitespace_number(URL):
 def is_https(scheme):
     return int(scheme == "https")
 
+
+# HTML features: 
+
+
+def has_title(driver):
+    return int(len(driver.find_elements(By.TAG_NAME, "title")) > 0)
+
+def has_robots(driver):
+    return
