@@ -8,6 +8,7 @@ import re
 def main_extractor(URL):
     driver = webdriver.Chrome()
     driver.get(URL)
+    page_source = driver.page_source
     parsed_url = urlparse(URL)
     fqdn = parsed_url.hostname
     tld = tldextract.extract(URL).suffix
@@ -76,4 +77,66 @@ def has_title(driver):
     return int(len(driver.find_elements(By.TAG_NAME, "title")) > 0)
 
 def has_robots(driver):
-    return
+    return int(len(driver.find_elements(By.XPATH, "//meta[@name='robots']")) > 0)
+
+def has_icon(driver):
+    return int(len(driver.find_elements(By.XPATH, "//link[@rel='icon']")) > 0)
+
+def number_of_redirections(driver):
+    clickable_links = 0
+    links = driver.find_elements(By.TAG_NAME, "a")
+    for link in links:
+        if link.is_displayed():
+            clickable_links += 1
+    return clickable_links
+
+def has_description(driver):
+    return int(len(driver.find_elements(By.XPATH, "//meta[@name='description']")) > 0)
+
+def number_of_popups(driver):
+    return driver.page_source.lower().count("window.open")
+
+def number_of_iframes(driver):
+    return len(driver.find_elements(By.TAG_NAME, "iframe"))
+
+def number_of_form_submits(driver):
+    return len(driver.find_elements(By.TAG_NAME, "form"))
+
+def has_submit_button(driver):
+    return int(len(driver.find_elements(By.XPATH, "//input[@type='submit']")) + len(driver.find_elements(By.XPATH, "//button[@type='submit']")) > 0)
+
+def has_hidden_fields(driver):
+    return int(len(driver.find_elements(By.XPATH, "//input[@type='hidden']")) > 0)
+
+def has_password_field(driver):
+    return int(len(driver.find_elements(By.XPATH, "//input[@type='password']")) > 0)
+
+def has_bank_reference(driver):
+    return driver.page_source.lower().count("bank")
+
+def has_pay_reference(driver):
+    return driver.page_source.lower().count("pay")
+
+def has_crypto_reference(driver):
+    return driver.page_source.lower().count("crypto")
+
+def number_of_images(driver):
+    return len(driver.find_elements(By.TAG_NAME, "img"))
+
+def number_of_css_references(driver):
+    link_css_count = len(driver.find_elements(By.XPATH, '//link[@rel="stylesheet"]'))
+    style_css_count = len(driver.find_elements(By.TAG_NAME, 'style'))
+    inline_css_count = len(driver.find_elements(By.XPATH, '//*[@style]'))
+    total_css_references = link_css_count + style_css_count + inline_css_count
+    return total_css_references
+
+def number_of_js_references(driver):
+    script_js_count = len(driver.find_elements(By.TAG_NAME, 'script'))
+    js_event_attributes = [
+        'onclick', 'onmouseover', 'onload', 'onchange', 'onsubmit', 'onkeydown', 
+        'onkeyup', 'onfocus', 'onblur', 'onselect', 'onerror']
+    js_event_count = 0
+    for attr in js_event_attributes:
+        js_event_count += len(driver.find_elements(By.XPATH, f'//*[@{attr}]'))
+    total_js_references = script_js_count + js_event_count
+    return(total_js_references)
