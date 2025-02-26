@@ -4,16 +4,16 @@ from urllib.parse import urlparse
 import tldextract
 import ipaddress
 import re
+import requests
 
 def main_extractor(URL):
     driver = webdriver.Chrome()
     driver.get(URL)
-    page_source = driver.page_source
     parsed_url = urlparse(URL)
     fqdn = parsed_url.hostname
     tld = tldextract.extract(URL).suffix
     scheme = parsed_url.scheme
-    result = [url_length(URL), fqdn_length(URL), is_domain_ip(fqdn), tld_length(tld), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), whitespace_number(URL), is_https(scheme)] 
+    result = [url_length(URL), fqdn_length(URL), tld_length(tld), is_domain_ip(fqdn), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), spaces_to_total_ratio(URL), is_https(scheme), number_of_html_lines(URL), size_of_largest_html_line(URL), has_title(driver), has_icon(driver), has_robots(driver), number_of_popups(driver), number_of_iframes(driver), has_form_submits(driver), has_submit_button(driver), has_hidden_fields(driver), has_password_field(driver), has_bank_reference(driver), has_pay_reference(driver), has_crypto_reference(driver), has_copyright_info(driver), number_of_images(driver), number_of_css_references(driver), number_of_js_references(driver)] 
     print(result)
     driver.quit()
 
@@ -25,6 +25,9 @@ def url_length(URL):
 def fqdn_length(fqdn):
     return len(fqdn)
 
+def tld_length(tld):
+    return len(tld)
+
 def is_domain_ip(fqdn):
     try:
         if ipaddress.ip_address(fqdn):
@@ -32,14 +35,15 @@ def is_domain_ip(fqdn):
     except ValueError:
         return 0
 
-def tld_length(tld):
-    return len(tld)
+def is_tld_in_blacklist(tld):
+    blacklist = ["xyz", "site", "top", "online", "info", "space", "live", "click", "mov", "zip", "sx", "cc", "vg", "cm", "cn", "pm", "st", "ac", "tv", "ru", "qa", "my", "me", "pw", "co", "tw", "ge", "su", "ng"]
+    return int(tld in blacklist)
 
 def subdomain_number(fqdn):
     return len(tldextract.extract(fqdn).subdomain.split("."))
 
 def obfuscated_chars_number(URL):
-    return len(URL) - len(re.findall(r"[A-Za-z0-9-._~:/?#\[\]@!$&'()*+,;%=]", URL))
+    return len(re.findall(r"%[0-9a-fA-F]{2}", URL))
 
 def letter_to_total_ratio(URL):
     letters = len(re.findall(r"[a-zA-Z]", URL))
@@ -63,8 +67,10 @@ def ampersand_chars_number(URL):
 def other_special_chars_number(URL):
     return len(re.findall(r"[-_~#\[\]@!$'\(\)\*\+,;%]", URL))
 
-def whitespace_number(URL):
-    return len(re.findall(r"%20", URL))
+def spaces_to_total_ratio(URL):
+    spaces = len(re.findall(r"%20", URL))
+    total_chars = len(URL)
+    return spaces / total_chars if total_chars > 0 else 0
 
 def is_https(scheme):
     return int(scheme == "https")
@@ -72,15 +78,20 @@ def is_https(scheme):
 
 # HTML features: 
 
+def number_of_html_lines(URL):
+    return len(requests.get(URL).text.split('\n'))
+
+def size_of_largest_html_line(URL):
+    return len(max(requests.get(URL).text.split('\n'), key=len))
 
 def has_title(driver):
     return int(len(driver.find_elements(By.TAG_NAME, "title")) > 0)
 
-def has_robots(driver):
-    return int(len(driver.find_elements(By.XPATH, "//meta[@name='robots']")) > 0)
-
 def has_icon(driver):
     return int(len(driver.find_elements(By.XPATH, "//link[@rel='icon']")) > 0)
+
+def has_robots(driver):
+    return int(len(driver.find_elements(By.XPATH, "//meta[@name='robots']")) > 0)
 
 def number_of_redirections(driver):
     clickable_links = 0
@@ -89,6 +100,18 @@ def number_of_redirections(driver):
         if link.is_displayed():
             clickable_links += 1
     return clickable_links
+
+def number_of_self_redirections(driver, fqdn):
+    self_redirections = 0
+    links = driver.find_elements(By.TAG_NAME, "a")
+    for link in links:
+        parsed_link = urlparse(link.get_property('href'))
+        if fqdn == parsed_link.hostname or "www." + fqdn == parsed_link.hostname:
+            self_redirections += 1
+    return self_redirections
+
+def number_of_empty_redirections(driver):
+    return len(driver.find_elements(By.XPATH, "//link[@href='']"))
 
 def has_description(driver):
     return int(len(driver.find_elements(By.XPATH, "//meta[@name='description']")) > 0)
@@ -99,8 +122,8 @@ def number_of_popups(driver):
 def number_of_iframes(driver):
     return len(driver.find_elements(By.TAG_NAME, "iframe"))
 
-def number_of_form_submits(driver):
-    return len(driver.find_elements(By.TAG_NAME, "form"))
+def has_form_submits(driver):
+    return int(len(driver.find_elements(By.TAG_NAME, "form")) > 0)
 
 def has_submit_button(driver):
     return int(len(driver.find_elements(By.XPATH, "//input[@type='submit']")) + len(driver.find_elements(By.XPATH, "//button[@type='submit']")) > 0)
@@ -119,6 +142,9 @@ def has_pay_reference(driver):
 
 def has_crypto_reference(driver):
     return driver.page_source.lower().count("crypto")
+
+def has_copyright_info(driver):
+    return int(len(driver.find_elements(By.TAG_NAME, "footer")) > 0)
 
 def number_of_images(driver):
     return len(driver.find_elements(By.TAG_NAME, "img"))
