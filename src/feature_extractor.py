@@ -13,8 +13,8 @@ def main_extractor(URL):
     fqdn = parsed_url.hostname
     tld = tldextract.extract(URL).suffix
     scheme = parsed_url.scheme
-    result = [URL, url_length(URL), fqdn_length(URL), tld_length(tld), is_domain_ip(fqdn), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), spaces_to_total_ratio(URL), is_https(scheme), number_of_html_lines(URL), size_of_largest_html_line(URL), has_title(driver), has_icon(driver), has_robots(driver), number_of_popups(driver), number_of_iframes(driver), has_form_submits(driver), has_submit_button(driver), has_hidden_fields(driver), has_password_field(driver), has_bank_reference(driver), has_pay_reference(driver), has_crypto_reference(driver), has_copyright_info(driver), number_of_images(driver), number_of_css_references(driver), number_of_js_references(driver)] 
-    print(result)
+    result = [URL, url_length(URL), fqdn_length(URL), is_domain_ip(fqdn), tld_length(tld), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), spaces_to_total_ratio(URL), is_https(scheme), number_of_html_lines(URL), size_of_largest_html_line(URL), has_title(driver), has_icon(driver), has_robots(driver), has_description(driver), number_of_popups(driver), number_of_iframes(driver), has_form_submits(driver), has_submit_button(driver), has_hidden_fields(driver), has_password_field(driver), has_bank_reference(driver), has_pay_reference(driver), has_crypto_reference(driver), has_copyright_info(driver), number_of_images(driver), number_of_css_references(driver), number_of_js_references(driver), number_of_self_redirections(driver, fqdn), number_of_empty_redirections(driver), number_of_external_redirections(driver, URL)] 
+    #print(result)
     driver.quit()
 
 # URL features:
@@ -93,26 +93,6 @@ def has_icon(driver):
 def has_robots(driver):
     return int(len(driver.find_elements(By.XPATH, "//meta[@name='robots']")) > 0)
 
-def number_of_redirections(driver):
-    clickable_links = 0
-    links = driver.find_elements(By.TAG_NAME, "a")
-    for link in links:
-        if link.is_displayed():
-            clickable_links += 1
-    return clickable_links
-
-def number_of_self_redirections(driver, fqdn):
-    self_redirections = 0
-    links = driver.find_elements(By.TAG_NAME, "a")
-    for link in links:
-        parsed_link = urlparse(link.get_property('href'))
-        if fqdn == parsed_link.hostname or "www." + fqdn == parsed_link.hostname:
-            self_redirections += 1
-    return self_redirections
-
-def number_of_empty_redirections(driver):
-    return len(driver.find_elements(By.XPATH, "//link[@href='']"))
-
 def has_description(driver):
     return int(len(driver.find_elements(By.XPATH, "//meta[@name='description']")) > 0)
 
@@ -166,3 +146,23 @@ def number_of_js_references(driver):
         js_event_count += len(driver.find_elements(By.XPATH, f'//*[@{attr}]'))
     total_js_references = script_js_count + js_event_count
     return(total_js_references)
+
+def number_of_self_redirections(driver, fqdn):
+    self_redirections = 0
+    links = driver.find_elements(By.TAG_NAME, "a")
+    for link in links:
+        parsed_link = urlparse(link.get_property('href'))
+        if fqdn == parsed_link.hostname or "www." + fqdn == parsed_link.hostname:
+            self_redirections += 1
+    return self_redirections
+
+def number_of_empty_redirections(driver):
+    return len(driver.find_elements(By.XPATH, "//link[@href='']"))
+
+def number_of_external_redirections(driver, URL):
+    external_redirections = 0
+    links = driver.find_elements(By.TAG_NAME, "a")
+    for link in links:
+        if tldextract.extract(URL).domain != tldextract.extract(link.get_property('href')).domain:
+            external_redirections += 1
+    return external_redirections
