@@ -2,3 +2,4 @@
 .ipynb_checkpoints
 /src/__pycache__/
 /samples/
+/ml/label_extract_test.py
