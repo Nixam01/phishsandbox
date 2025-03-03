@@ -1,11 +1,11 @@
 from collections import defaultdict
+from urllib.parse import urlparse
 import regex as re
 import tkinter as tk
-import tldextract
+import requests
 from tkinter import filedialog
 from email.parser import BytesParser
 from email import policy
-from vt_wrapper import check_domain
 
 def load_eml():
     root = tk.Tk()
@@ -54,7 +54,7 @@ def extract_domains(object):
     if isinstance(object, str):
         body_domains = []
         body_domains.extend(re.findall(domain_pattern2, object))
-        return body_domains
+        return list(set(body_domains))
 
     if isinstance(object, dict):
         header_domains = []
@@ -63,36 +63,32 @@ def extract_domains(object):
                 domain_matches = re.findall(domain_pattern1, str(value))
                 if domain_matches:
                     header_domains.extend(domain_matches)
-
-        return header_domains
-
-message = load_eml()
-header_dict = parse_headers(message)
-body = parse_body(message)
-
-if header_dict:
-    #for key, value in header_dict.items():
-    #    print(f"{key}: {value}")
-    header_domains = list(dict.fromkeys(map(str.lower, extract_domains(header_dict))))
-    body_domains = list(dict.fromkeys(map(str.lower, extract_domains(body))))
+        return list(set(header_domains))
     
-for domain in body_domains:
-    domain_analysis_results = {}
-    tld = tldextract.extract(domain).suffix
-    length = len(domain)
-    subdomains = len(tldextract.extract(domain).subdomain.split("."))
-    is_ascii = domain.isascii()
-    domain_creation_date, malicious_hits, is_certificate_valid = check_domain(domain)
-    domain_analysis_results[domain] = {
-            "tld": tld,
-            "length": length,
-            "subdomains": subdomains,
-            "is_ascii": is_ascii,
-            "domain_creation_date": domain_creation_date,
-            "malicious_hits": malicious_hits,
-            "is_certificate_valid": is_certificate_valid
-        }
-    print(domain_analysis_results)
+def check_protocol(domains):
+    urls = []
+    for domain in domains:
+        try:
+            r = requests.get(domain)
+            urls.append(r.url)
+        except:
+            try:
+                r = requests.get('https://' + domain)
+                urls.append(r.url)
+            except:
+                try:
+                    r = requests.get('http://' + domain)
+                    urls.append(r.url)
+                except:
+                    print("Cannot connect to " + domain)
+    return urls
 
-print("Domains in header:", header_domains)
-print("Domains in body:", body_domains)
+def parse_email():
+    message = load_eml()
+    body = parse_body(message)
+    body_domains = extract_domains(body)
+    urls = check_protocol(body_domains)
+    return urls
+
+
+

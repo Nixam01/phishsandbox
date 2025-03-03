@@ -13,9 +13,9 @@ def main_extractor(URL):
     fqdn = parsed_url.hostname
     tld = tldextract.extract(URL).suffix
     scheme = parsed_url.scheme
-    result = [URL, url_length(URL), fqdn_length(URL), is_domain_ip(fqdn), tld_length(tld), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), spaces_to_total_ratio(URL), is_https(scheme), number_of_html_lines(URL), size_of_largest_html_line(URL), has_title(driver), has_icon(driver), has_robots(driver), has_description(driver), number_of_popups(driver), number_of_iframes(driver), has_form_submits(driver), has_submit_button(driver), has_hidden_fields(driver), has_password_field(driver), has_bank_reference(driver), has_pay_reference(driver), has_crypto_reference(driver), has_copyright_info(driver), number_of_images(driver), number_of_css_references(driver), number_of_js_references(driver), number_of_self_redirections(driver, fqdn), number_of_empty_redirections(driver), number_of_external_redirections(driver, URL)] 
+    result = [URL, url_length(URL), fqdn_length(URL), is_domain_ip(fqdn), tld_length(tld), subdomain_number(fqdn), obfuscated_chars_number(URL), letter_to_total_ratio(URL), number_to_total_ratio(URL), equal_chars_number(URL), question_mark_chars_number(URL), ampersand_chars_number(URL), other_special_chars_number(URL), spaces_to_total_ratio(URL), is_https(scheme), number_of_html_lines(URL), size_of_largest_html_line(URL), has_title(driver), has_icon(driver), has_robots(driver), has_description(driver), number_of_popups(driver), number_of_iframes(driver), has_form_submits(driver), has_submit_button(driver), has_hidden_fields(driver), has_password_field(driver), has_bank_reference(driver), has_pay_reference(driver), has_crypto_reference(driver), has_copyright_info(driver), number_of_images(driver), number_of_css_references(driver), number_of_js_references(driver), number_of_self_redirections(driver, fqdn), number_of_empty_redirections(driver), number_of_external_redirections(driver, URL)]
     driver.quit()
-    return result
+    return result 
 
 # URL features:
 
@@ -166,5 +166,3 @@ def number_of_external_redirections(driver, URL):
         if tldextract.extract(URL).domain != tldextract.extract(link.get_property('href')).domain:
             external_redirections += 1
     return external_redirections
-
-main_extractor("https://example.com")
