@@ -21,6 +21,8 @@ print("Decision Tree: Accuracy on test Data: {:.10f}".format(acc_test_tree))
 
 
 def predict_domain(features):
-    testrecord_df = pd.DataFrame(features, columns=X_train.columns)
-    y_predicted_on_record = tree.predict(testrecord_df)
+    record = pd.Series(features)
+    record = record.iloc[1:]
+    record_df = pd.DataFrame(record.values, columns=X_train.columns)
+    y_predicted_on_record = tree.predict(record_df)
     print(y_predicted_on_record)

@@ -10,6 +10,7 @@ print(urls)
 
 for url in urls:
     features = main_extractor(url)
+    print(features)
     predict_domain(features)
     print(domain_hits(url))
 
