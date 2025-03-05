@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from urllib.parse import urlparse
 import tldextract
 import ipaddress
@@ -7,7 +8,10 @@ import re
 import requests
 
 def main_extractor(URL):
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument('--headless=new')
+    options.add_argument("--log-level=3")
+    driver = webdriver.Chrome(options=options)
     driver.get(URL)
     parsed_url = urlparse(URL)
     fqdn = parsed_url.hostname

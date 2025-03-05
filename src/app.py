@@ -6,12 +6,8 @@ from vt_wrapper import domain_hits
 input('Press ENTER to load an .eml file')
 
 urls = parse_email()
-print(urls)
 
 for url in urls:
     features = main_extractor(url)
-    print(features)
-    predict_domain(features)
-    print(domain_hits(url))
-
-
+    predict_domain(features, url)
+    print("VirusTotal hits: " + str(domain_hits(url)))

@@ -15,6 +15,7 @@ headers = {
 }
 def domain_hits(domain):
     try:
+        domain = domain.split("://")[1].strip("/")
         url = f"https://www.virustotal.com/api/v3/domains/{domain}"
         response = requests.get(url, headers=headers)
         response.raise_for_status()

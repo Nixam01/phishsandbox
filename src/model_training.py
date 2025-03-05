@@ -9,20 +9,18 @@ y = data['label']
 X = data.drop('label',axis=1)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 12)
-X_train.shape, X_test.shape
 
 tree = DecisionTreeClassifier(max_depth = 10) 
 tree.fit(X_train, y_train)
 
 y_predict = tree.predict(X_test)
 
-acc_test_tree = accuracy_score(y_test,y_predict)
-print("Decision Tree: Accuracy on test Data: {:.10f}".format(acc_test_tree))
-
-
-def predict_domain(features):
+def predict_domain(features, url):
     record = pd.Series(features)
     record = record.iloc[1:]
-    record_df = pd.DataFrame(record.values, columns=X_train.columns)
+    record_df = pd.DataFrame([record.values], columns=X_train.columns)
     y_predicted_on_record = tree.predict(record_df)
-    print(y_predicted_on_record)
+    if y_predicted_on_record == 1:
+        print('URL ' + url + ' is legitimate')
+    else:
+        print('URL ' + url + ' is likely a phishing')
